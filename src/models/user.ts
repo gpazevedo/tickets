@@ -26,16 +26,26 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     }
+}, {
+    toJSON: {
+        transform(doc, ret) {
+            ret.id = doc._id;
+            delete ret._id;
+            delete ret.__v;
+            delete ret.password;
+        }
+    }
+
 })
 
 userSchema.pre('save', async function(done) {
-    if (this.isModified('password')) {
-      const hashed = await Password.toHash(this.get('password'));
-      this.set('password', hashed);
-    }
-    done();
-  });
-  
+  if (this.isModified('password')) {
+    const hashed = await Password.toHash(this.get('password'));
+    this.set('password', hashed);
+  }
+  done();
+});
+
 userSchema.statics.build = (attrs: UserAttrs) => {
     return new User(attrs);
 };
